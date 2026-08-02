@@ -1,17 +1,12 @@
 {
   "expo": {
     "name": "App Financiera Personal",
-    "slug": "fin-personal",
+    "slug": "finanzas-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "finpersonal",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0A0E1A"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.finpersonal.app",
@@ -28,11 +23,11 @@
       },
       "package": "com.finpersonal.app",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT",
-        "VIBRATE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.VIBRATE"
       ]
     },
     "web": {
@@ -44,6 +39,7 @@
       "expo-router",
       "expo-sqlite",
       "expo-local-authentication",
+      "expo-font",
       [
         "expo-camera",
         {
@@ -72,6 +68,6 @@
         "projectId": "27a36283-c42e-4770-8f70-c39032dae1a5"
       }
     },
-    "owner": "fit58ccs"
+    "owner": "finanzas-app"
   }
 }
