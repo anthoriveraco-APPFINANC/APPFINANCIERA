@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "App Financiera Personal",
+    "slug": "fin-personal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "finpersonal",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0E1A"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.finpersonal.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Para escanear capturas de pago con OCR",
+        "NSPhotoLibraryUsageDescription": "Para seleccionar capturas de pago de la galería",
+        "NSFaceIDUsageDescription": "Para proteger el acceso a tus finanzas"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0A0E1A"
+      },
+      "package": "com.finpersonal.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-local-authentication",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Para escanear capturas de pago con OCR"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Para seleccionar capturas de pago de la galería"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#3B82F6"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
