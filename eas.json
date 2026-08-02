@@ -13,11 +13,7 @@
       },
       "distribution": "internal"
     },
-    "production": {
-      "android": {
-        "buildType": "aab"
-      }
-    }
+    "production": {}
   },
   "submit": {
     "production": {}
