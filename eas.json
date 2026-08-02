@@ -12,8 +12,7 @@
       "android": {
         "buildType": "apk"
       },
-      "distribution": "internal",
-      "node": "20.19.2"
+      "distribution": "internal"
     },
     "production": {}
   },
