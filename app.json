@@ -7,15 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "finpersonal",
     "userInterfaceStyle": "dark",
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.finpersonal.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Para escanear capturas de pago con OCR",
-        "NSPhotoLibraryUsageDescription": "Para seleccionar capturas de pago de la galería",
-        "NSFaceIDUsageDescription": "Para proteger el acceso a tus finanzas"
-      }
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -30,16 +21,10 @@
         "android.permission.VIBRATE"
       ]
     },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": [
       "expo-router",
       "expo-sqlite",
       "expo-local-authentication",
-      "expo-font",
       [
         "expo-camera",
         {
