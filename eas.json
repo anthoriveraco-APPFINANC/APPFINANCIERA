@@ -11,7 +11,7 @@
     "preview": {
       "android": {
         "buildType": "apk",
-        "image": "latest"
+        "image": "ubuntu-22.04-jdk-17-ndk-r27"
       },
       "distribution": "internal",
       "env": {
