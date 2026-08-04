@@ -1,13 +1,10 @@
 // ============================================================
-// SETTINGS.TSX — Configuración
-// App Financiera Personal
+// SETTINGS — Cuantos Dolitas
 // ============================================================
-
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Alert, Switch, ActivityIndicator,
-  Platform,
+  TextInput, Alert, Switch, ActivityIndicator, Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -18,108 +15,69 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import * as LocalAuthentication from 'expo-local-authentication';
 
+import { useTheme } from './_layout';
 import { getAjustes, updateAjustes, exportarDatosJSON, importarDatosJSON } from '../src/db/database';
-import { formatUSD, parsearMonto } from '../src/utils/currency';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, DEFAULT_TASA_BS_USD } from '../src/constants';
+import { parsearMonto } from '../src/utils/currency';
+import { TYPOGRAPHY, SPACING, RADIUS, DEFAULT_TASA_BS_USD } from '../src/constants';
+import { programarNotificacionesDeudas } from '../src/utils/notifications';
 import type { Ajustes } from '../src/types';
 
-// ============================================================
-// COMPONENTE: Fila de ajuste con Switch
-// ============================================================
-function FilaSwitch({
-  icono, label, descripcion, valor, color, onChange,
-}: {
-  icono: React.ComponentProps<typeof Ionicons>['name'];
-  label: string;
-  descripcion?: string;
-  valor: boolean;
-  color?: string;
-  onChange: (v: boolean) => void;
-}) {
+function Seccion({ titulo, children, colors }: { titulo: string; children: React.ReactNode; colors: any }) {
   return (
-    <View style={filaS.row}>
-      <View style={[filaS.icono, { backgroundColor: (color ?? COLORS.accent) + '20' }]}>
-        <Ionicons name={icono} size={18} color={color ?? COLORS.accent} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={filaS.label}>{label}</Text>
-        {descripcion ? <Text style={filaS.desc}>{descripcion}</Text> : null}
-      </View>
-      <Switch
-        value={valor}
-        onValueChange={onChange}
-        trackColor={{ false: COLORS.border, true: (color ?? COLORS.accent) + '80' }}
-        thumbColor={valor ? (color ?? COLORS.accent) : COLORS.textMuted}
-        ios_backgroundColor={COLORS.border}
-      />
-    </View>
-  );
-}
-
-// ============================================================
-// COMPONENTE: Fila de acción con botón
-// ============================================================
-function FilaAccion({
-  icono, label, descripcion, color, onPress, loading, sublabel,
-}: {
-  icono: React.ComponentProps<typeof Ionicons>['name'];
-  label: string;
-  descripcion?: string;
-  color?: string;
-  onPress: () => void;
-  loading?: boolean;
-  sublabel?: string;
-}) {
-  return (
-    <TouchableOpacity style={filaS.row} onPress={onPress} activeOpacity={0.7}>
-      <View style={[filaS.icono, { backgroundColor: (color ?? COLORS.accent) + '20' }]}>
-        {loading
-          ? <ActivityIndicator size="small" color={color ?? COLORS.accent} />
-          : <Ionicons name={icono} size={18} color={color ?? COLORS.accent} />
-        }
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={filaS.label}>{label}</Text>
-        {descripcion ? <Text style={filaS.desc}>{descripcion}</Text> : null}
-      </View>
-      {sublabel
-        ? <Text style={[filaS.sublabel, { color: color ?? COLORS.accent }]}>{sublabel}</Text>
-        : <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} />
-      }
-    </TouchableOpacity>
-  );
-}
-
-const filaS = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, padding: SPACING.md, backgroundColor: COLORS.surface, borderRadius: RADIUS.md, marginBottom: SPACING.sm, borderWidth: 1, borderColor: COLORS.border },
-  icono: { width: 40, height: 40, borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: TYPOGRAPHY.base, fontWeight: '600', color: COLORS.textPrimary },
-  desc: { fontSize: TYPOGRAPHY.xs, color: COLORS.textMuted, marginTop: 2, lineHeight: 16 },
-  sublabel: { fontSize: TYPOGRAPHY.sm, fontWeight: '700' },
-});
-
-// ============================================================
-// COMPONENTE: Sección con título
-// ============================================================
-function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <View style={secS.c}>
-      <Text style={secS.titulo}>{titulo}</Text>
+    <View style={{ marginBottom: 24 }}>
+      <Text style={[sS.secTitulo, { color: colors.textMuted }]}>{titulo}</Text>
       {children}
     </View>
   );
 }
-const secS = StyleSheet.create({
-  c: { marginBottom: SPACING.lg },
-  titulo: { fontSize: TYPOGRAPHY.xs, fontWeight: '700', color: COLORS.textMuted, letterSpacing: 1.5, marginBottom: SPACING.sm, paddingHorizontal: SPACING.xs },
-});
 
-// ============================================================
-// PANTALLA PRINCIPAL
-// ============================================================
+function FilaSwitch({ icono, label, desc, valor, color, onChange, colors }: {
+  icono: any; label: string; desc?: string; valor: boolean;
+  color?: string; onChange: (v: boolean) => void; colors: any;
+}) {
+  const c = color ?? colors.accent;
+  return (
+    <View style={[sS.fila, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[sS.filaIcono, { backgroundColor: c + '20' }]}>
+        <Ionicons name={icono} size={18} color={c} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[sS.filaLabel, { color: colors.textPrimary }]}>{label}</Text>
+        {desc && <Text style={[sS.filaDesc, { color: colors.textMuted }]}>{desc}</Text>}
+      </View>
+      <Switch value={valor} onValueChange={onChange}
+        trackColor={{ false: colors.border, true: c + '80' }}
+        thumbColor={valor ? c : colors.textMuted}
+        ios_backgroundColor={colors.border} />
+    </View>
+  );
+}
+
+function FilaAccion({ icono, label, desc, color, onPress, loading, colors }: {
+  icono: any; label: string; desc?: string; color?: string;
+  onPress: () => void; loading?: boolean; colors: any;
+}) {
+  const c = color ?? colors.accent;
+  return (
+    <TouchableOpacity style={[sS.fila, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      onPress={onPress} activeOpacity={0.7}>
+      <View style={[sS.filaIcono, { backgroundColor: c + '20' }]}>
+        {loading ? <ActivityIndicator size="small" color={c} />
+          : <Ionicons name={icono} size={18} color={c} />}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[sS.filaLabel, { color: colors.textPrimary }]}>{label}</Text>
+        {desc && <Text style={[sS.filaDesc, { color: colors.textMuted }]}>{desc}</Text>}
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+    </TouchableOpacity>
+  );
+}
+
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const db = useSQLiteContext();
+  const { colors, esOscuro, toggleTema } = useTheme();
 
   const [ajustes, setAjustes] = useState<Ajustes | null>(null);
   const [tasaInput, setTasaInput] = useState('');
@@ -128,6 +86,7 @@ export default function SettingsScreen() {
   const [importando, setImportando] = useState(false);
   const [guardandoTasa, setGuardandoTasa] = useState(false);
   const [tieneBiometria, setTieneBiometria] = useState(false);
+  const [diasAviso, setDiasAviso] = useState('3');
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -135,20 +94,15 @@ export default function SettingsScreen() {
       const aj = await getAjustes(db);
       setAjustes(aj);
       setTasaInput(aj.tasa_global_bs_usd.toString());
-
-      const compatible = await LocalAuthentication.hasHardwareAsync();
-      const registrado = await LocalAuthentication.isEnrolledAsync();
-      setTieneBiometria(compatible && registrado);
-    } catch (e) {
-      console.error('[Settings]', e);
-    } finally {
-      setCargando(false);
-    }
+      const comp = await LocalAuthentication.hasHardwareAsync();
+      const reg = await LocalAuthentication.isEnrolledAsync();
+      setTieneBiometria(comp && reg);
+    } catch (e) { console.error(e); }
+    finally { setCargando(false); }
   }, [db]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  // ── ACTUALIZAR TASA ──
   const guardarTasa = useCallback(async () => {
     const tasa = parsearMonto(tasaInput);
     if (tasa <= 0) { Alert.alert('Error', 'Tasa inválida.'); return; }
@@ -159,321 +113,230 @@ export default function SettingsScreen() {
     Alert.alert('✅ Listo', `Tasa actualizada a Bs. ${tasa.toFixed(2)}/USD`);
   }, [db, tasaInput, cargar]);
 
-  // ── TOGGLE SWITCH ──
-  const toggleSwitch = useCallback(async (campo: keyof Omit<Ajustes, 'id' | 'tasa_global_bs_usd'>, valor: boolean) => {
+  const toggleSwitch = useCallback(async (campo: 'usar_biometria' | 'ocultar_saldos', valor: boolean) => {
     if (campo === 'usar_biometria' && valor && !tieneBiometria) {
-      Alert.alert('No disponible', 'Este dispositivo no tiene biometría configurada.');
-      return;
+      Alert.alert('No disponible', 'Este dispositivo no tiene biometría configurada.'); return;
     }
     await updateAjustes(db, { [campo]: valor ? 1 : 0 });
     setAjustes(prev => prev ? { ...prev, [campo]: valor ? 1 : 0 } : prev);
   }, [db, tieneBiometria]);
 
-  // ── EXPORTAR JSON ──
   const exportarBackup = useCallback(async () => {
     setExportando(true);
     try {
       const json = await exportarDatosJSON(db);
       const fecha = new Date().toISOString().split('T')[0];
-      const nombreArchivo = `finanzas_backup_${fecha}.json`;
-      const rutaTemp = FileSystem.documentDirectory + nombreArchivo;
-
-      await FileSystem.writeAsStringAsync(rutaTemp, json, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
-
-      const puedeCompartir = await Sharing.isAvailableAsync();
-      if (puedeCompartir) {
-        await Sharing.shareAsync(rutaTemp, {
-          mimeType: 'application/json',
-          dialogTitle: `Backup — ${fecha}`,
-          UTI: 'public.json',
-        });
+      const ruta = FileSystem.documentDirectory + `cuantos_dolitas_${fecha}.json`;
+      await FileSystem.writeAsStringAsync(ruta, json, { encoding: FileSystem.EncodingType.UTF8 });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(ruta, { mimeType: 'application/json', dialogTitle: `Backup ${fecha}` });
       } else {
-        Alert.alert('Backup guardado', `Archivo: ${nombreArchivo}\nRuta: ${rutaTemp}`);
+        Alert.alert('Guardado', ruta);
       }
-    } catch (e) {
-      console.error('[Backup Export]', e);
-      Alert.alert('Error', 'No se pudo exportar el backup.');
-    } finally {
-      setExportando(false);
-    }
+    } catch { Alert.alert('Error', 'No se pudo exportar.'); }
+    finally { setExportando(false); }
   }, [db]);
 
-  // ── IMPORTAR JSON ──
   const importarBackup = useCallback(async () => {
-    Alert.alert(
-      '⚠️ Importar Backup',
-      'Esta acción BORRARÁ todos los datos actuales y los reemplazará con los del archivo. ¿Continuar?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Importar',
-          style: 'destructive',
-          onPress: async () => {
-            setImportando(true);
-            try {
-              const resultado = await DocumentPicker.getDocumentAsync({
-                type: 'application/json',
-                copyToCacheDirectory: true,
-              });
-
-              if (resultado.canceled || !resultado.assets?.[0]) {
-                setImportando(false);
-                return;
-              }
-
-              const uri = resultado.assets[0].uri;
-              const contenido = await FileSystem.readAsStringAsync(uri, {
-                encoding: FileSystem.EncodingType.UTF8,
-              });
-
-              const ok = await importarDatosJSON(db, contenido);
-              if (ok) {
-                Alert.alert('✅ Importación exitosa', 'Los datos han sido restaurados correctamente.');
-                await cargar();
-              } else {
-                Alert.alert('Error', 'El archivo no es un backup válido.');
-              }
-            } catch (e) {
-              console.error('[Backup Import]', e);
-              Alert.alert('Error', 'No se pudo importar el backup.');
-            } finally {
-              setImportando(false);
-            }
-          },
-        },
-      ],
-    );
+    Alert.alert('⚠️ Restaurar Backup',
+      'Esto borrará todos los datos actuales. ¿Continuar?',
+      [{ text: 'Cancelar', style: 'cancel' },
+       { text: 'Restaurar', style: 'destructive', onPress: async () => {
+         setImportando(true);
+         try {
+           const res = await DocumentPicker.getDocumentAsync({ type: 'application/json', copyToCacheDirectory: true });
+           if (res.canceled || !res.assets?.[0]) { setImportando(false); return; }
+           const contenido = await FileSystem.readAsStringAsync(res.assets[0].uri, { encoding: FileSystem.EncodingType.UTF8 });
+           const ok = await importarDatosJSON(db, contenido);
+           if (ok) { Alert.alert('✅ Éxito', 'Datos restaurados.'); await cargar(); }
+           else Alert.alert('Error', 'Archivo inválido.');
+         } catch { Alert.alert('Error', 'No se pudo importar.'); }
+         finally { setImportando(false); }
+       }}]);
   }, [db, cargar]);
 
-  // ── RESTABLECER SEED ──
-  const restablecerDatos = useCallback(() => {
-    Alert.alert(
-      '⚠️ Restablecer datos iniciales',
-      'Esto recargará las personas y deudas iniciales. Los datos actuales se mantendrán.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Restablecer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { setMetaValor } = await import('../src/db/database');
-              const { ejecutarSeedSiNecesario } = await import('../src/db/seed');
-              // Resetear flag para re-ejecutar seed
-              await db.runAsync("DELETE FROM _meta WHERE clave = 'seed_v1_completado'");
-              await ejecutarSeedSiNecesario(db);
-              Alert.alert('✅ Hecho', 'Datos iniciales restaurados.');
-            } catch (e) {
-              Alert.alert('Error', 'No se pudo restablecer.');
-            }
-          },
-        },
-      ],
-    );
+  const reprogramarNotificaciones = useCallback(async () => {
+    const dias = parseInt(diasAviso) || 3;
+    await programarNotificacionesDeudas(db, dias);
+    Alert.alert('✅ Notificaciones', `Se programaron alertas ${dias} días antes de cada vencimiento.`);
+  }, [db, diasAviso]);
+
+  const borrarTodo = useCallback(() => {
+    Alert.alert('⚠️ BORRAR TODO',
+      'Esto eliminará TODOS los datos de la app permanentemente. ¿Estás seguro?',
+      [{ text: 'Cancelar', style: 'cancel' },
+       { text: 'BORRAR TODO', style: 'destructive', onPress: async () => {
+         await db.execAsync(`
+           DELETE FROM movimientos_inversion;
+           DELETE FROM abonos_deudas;
+           DELETE FROM gastos;
+           DELETE FROM ingresos;
+           DELETE FROM inversiones;
+           DELETE FROM deudas_compromisos;
+           DELETE FROM personas;
+           DELETE FROM _meta;
+         `);
+         Alert.alert('✅ Listo', 'Todos los datos fueron eliminados.');
+       }}]);
   }, [db]);
 
   if (cargando || !ajustes) {
     return (
-      <View style={[s.container, s.centrado, { paddingTop: insets.top }]}>
-        <ActivityIndicator color={COLORS.accent} size="large" />
+      <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
 
-  const tasa = ajustes.tasa_global_bs_usd;
-  const tasaActualizada = parsearMonto(tasaInput);
-  const tasaModificada = tasaActualizada !== tasa && tasaActualizada > 0;
+  const tasaNum = parsearMonto(tasaInput);
+  const tasaCambiada = tasaNum !== ajustes.tasa_global_bs_usd && tasaNum > 0;
 
   return (
-    <View style={[s.container, { paddingTop: insets.top }]}>
+    <View style={[{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
+      <View style={[sS.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[sS.backBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={s.titulo}>Configuración</Text>
+        <Text style={[sS.titulo, { color: colors.textPrimary }]}>Configuración</Text>
       </View>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={s.scroll}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* ── TASA DE CAMBIO ── */}
-        <Seccion titulo="TASA DE CAMBIO BS/USD">
-          <View style={tasaS.card}>
-            <View style={tasaS.tasaHeader}>
-              <Ionicons name="swap-horizontal" size={18} color={COLORS.warning} />
-              <Text style={tasaS.tasaLabel}>Tasa Global</Text>
-              <View style={tasaS.tasaActualBadge}>
-                <Text style={tasaS.tasaActualTxt}>Actual: Bs. {tasa.toFixed(2)}/USD</Text>
-              </View>
+      <ScrollView contentContainerStyle={sS.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
+        {/* APARIENCIA */}
+        <Seccion titulo="APARIENCIA" colors={colors}>
+          <FilaSwitch
+            icono={esOscuro ? 'moon' : 'sunny'}
+            label="Modo Oscuro"
+            desc={esOscuro ? 'Tema oscuro activo' : 'Tema claro activo'}
+            valor={esOscuro}
+            color={esOscuro ? colors.info : colors.warning}
+            onChange={toggleTema}
+            colors={colors}
+          />
+        </Seccion>
+
+        {/* TASA */}
+        <Seccion titulo="TASA DE CAMBIO BS/USD" colors={colors}>
+          <View style={[sS.tasaCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[sS.tasaActual, { color: colors.textMuted }]}>
+              Actual: Bs. {ajustes.tasa_global_bs_usd.toFixed(2)}/USD
+            </Text>
+            <View style={[sS.tasaInputRow, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Text style={[sS.tasaPrefix, { color: colors.textSecondary, backgroundColor: colors.surfaceAlt }]}>Bs.</Text>
+              <TextInput style={[sS.tasaInput, { color: colors.textPrimary }]}
+                value={tasaInput} onChangeText={setTasaInput}
+                keyboardType="decimal-pad" placeholder={DEFAULT_TASA_BS_USD.toString()}
+                placeholderTextColor={colors.textMuted} />
+              <Text style={[sS.tasaPrefix, { color: colors.textSecondary, backgroundColor: colors.surfaceAlt }]}>/USD</Text>
             </View>
-
-            <View style={tasaS.inputRow}>
-              <Text style={tasaS.inputPrefix}>Bs.</Text>
-              <TextInput
-                style={tasaS.input}
-                value={tasaInput}
-                onChangeText={setTasaInput}
-                keyboardType="decimal-pad"
-                placeholder={DEFAULT_TASA_BS_USD.toString()}
-                placeholderTextColor={COLORS.textMuted}
-              />
-              <Text style={tasaS.inputSuffix}>/USD</Text>
-            </View>
-
-            {tasaModificada && (
-              <View style={tasaS.diferencia}>
-                <Ionicons name="information-circle" size={14} color={COLORS.warning} />
-                <Text style={tasaS.diferenciaTxt}>
-                  Cambio: {((tasaActualizada - tasa) / tasa * 100).toFixed(2)}% vs tasa actual
-                </Text>
-              </View>
-            )}
-
             <TouchableOpacity
-              style={[tasaS.btn, !tasaModificada && { opacity: 0.4 }, guardandoTasa && { opacity: 0.6 }]}
-              onPress={guardarTasa}
-              disabled={!tasaModificada || guardandoTasa}
-            >
-              {guardandoTasa
-                ? <ActivityIndicator color="#fff" size="small" />
-                : <><Ionicons name="checkmark" size={16} color="#fff" /><Text style={tasaS.btnTxt}>Actualizar Tasa</Text></>
-              }
+              style={[sS.tasaBtn, { backgroundColor: colors.warning, opacity: tasaCambiada ? 1 : 0.4 }]}
+              onPress={guardarTasa} disabled={!tasaCambiada || guardandoTasa}>
+              {guardandoTasa ? <ActivityIndicator color="#fff" size="small" />
+                : <><Ionicons name="checkmark" size={16} color="#fff" /><Text style={sS.tasaBtnTxt}>Actualizar Tasa</Text></>}
             </TouchableOpacity>
+          </View>
+        </Seccion>
 
-            <Text style={tasaS.nota}>
-              💡 Esta tasa se usa por defecto en todos los formularios. Puedes editarla por transacción.
+        {/* PRIVACIDAD */}
+        <Seccion titulo="PRIVACIDAD Y SEGURIDAD" colors={colors}>
+          <FilaSwitch icono="finger-print" label="Autenticación Biométrica"
+            desc={tieneBiometria ? 'Requiere huella al abrir la app' : 'No disponible en este dispositivo'}
+            valor={ajustes.usar_biometria === 1} color={colors.accent}
+            onChange={v => toggleSwitch('usar_biometria', v)} colors={colors} />
+          <FilaSwitch icono="eye-off" label="Ocultar Saldos al Iniciar"
+            desc="Los montos se muestran como $***.**"
+            valor={ajustes.ocultar_saldos === 1} color={colors.warning}
+            onChange={v => toggleSwitch('ocultar_saldos', v)} colors={colors} />
+        </Seccion>
+
+        {/* NOTIFICACIONES */}
+        <Seccion titulo="NOTIFICACIONES" colors={colors}>
+          <View style={[sS.tasaCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[sS.tasaActual, { color: colors.textMuted }]}>
+              Días de aviso previo al vencimiento
             </Text>
+            <View style={[sS.tasaInputRow, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <TextInput style={[sS.tasaInput, { color: colors.textPrimary, textAlign: 'center' }]}
+                value={diasAviso} onChangeText={setDiasAviso}
+                keyboardType="number-pad" placeholder="3"
+                placeholderTextColor={colors.textMuted} />
+              <Text style={[sS.tasaPrefix, { color: colors.textSecondary, backgroundColor: colors.surfaceAlt }]}>días</Text>
+            </View>
+            <TouchableOpacity style={[sS.tasaBtn, { backgroundColor: colors.income }]} onPress={reprogramarNotificaciones}>
+              <Ionicons name="notifications" size={16} color="#fff" />
+              <Text style={sS.tasaBtnTxt}>Reprogramar Notificaciones</Text>
+            </TouchableOpacity>
           </View>
         </Seccion>
 
-        {/* ── PRIVACIDAD Y SEGURIDAD ── */}
-        <Seccion titulo="PRIVACIDAD Y SEGURIDAD">
-          <FilaSwitch
-            icono="finger-print"
-            label="Autenticación Biométrica"
-            descripcion={tieneBiometria ? 'Requiere huella o Face ID al abrir la app' : 'No disponible en este dispositivo'}
-            valor={ajustes.usar_biometria === 1}
-            color={COLORS.accent}
-            onChange={v => toggleSwitch('usar_biometria', v)}
-          />
-          <FilaSwitch
-            icono="eye-off"
-            label="Ocultar Saldos al Iniciar"
-            descripcion="Los montos se muestran como $***.**"
-            valor={ajustes.ocultar_saldos === 1}
-            color={COLORS.warning}
-            onChange={v => toggleSwitch('ocultar_saldos', v)}
-          />
+        {/* DATOS */}
+        <Seccion titulo="DATOS Y RESPALDO" colors={colors}>
+          <FilaAccion icono="cloud-upload" label="Exportar Backup JSON"
+            desc="Guarda todos tus datos en un archivo"
+            color={colors.info} onPress={exportarBackup} loading={exportando} colors={colors} />
+          <FilaAccion icono="cloud-download" label="Restaurar desde Backup"
+            desc="⚠️ Borra datos actuales y restaura"
+            color={colors.warning} onPress={importarBackup} loading={importando} colors={colors} />
+          <FilaAccion icono="trash" label="Borrar Todos los Datos"
+            desc="⚠️ Elimina todo permanentemente"
+            color={colors.expense} onPress={borrarTodo} colors={colors} />
         </Seccion>
 
-        {/* ── DATOS Y BACKUP ── */}
-        <Seccion titulo="DATOS Y RESPALDO">
-          <FilaAccion
-            icono="cloud-upload"
-            label="Exportar Backup JSON"
-            descripcion="Guarda todos tus datos en un archivo JSON para compartir o respaldar"
-            color={COLORS.info}
-            onPress={exportarBackup}
-            loading={exportando}
-            sublabel={exportando ? undefined : 'Compartir'}
-          />
-          <FilaAccion
-            icono="cloud-download"
-            label="Restaurar desde Backup"
-            descripcion="⚠️ Borra los datos actuales y restaura desde un archivo JSON"
-            color={COLORS.warning}
-            onPress={importarBackup}
-            loading={importando}
-          />
-          <FilaAccion
-            icono="refresh"
-            label="Recargar Datos Iniciales"
-            descripcion="Vuelve a cargar las personas y deudas de ejemplo (no borra datos existentes)"
-            color={COLORS.textMuted}
-            onPress={restablecerDatos}
-          />
-        </Seccion>
+        {/* INFO */}
+        <View style={[sS.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {[
+            ['App', 'Cuantos Dolitas'],
+            ['Versión', '2.0.0'],
+            ['Base de datos', 'SQLite local'],
+            ['Plataforma', `${Platform.OS === 'android' ? 'Android' : 'iOS'}`],
+          ].map(([label, val], i, arr) => (
+            <React.Fragment key={label}>
+              <View style={sS.infoFila}>
+                <Text style={[sS.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
+                <Text style={[sS.infoVal, { color: colors.textPrimary }]}>{val}</Text>
+              </View>
+              {i < arr.length - 1 && <View style={[sS.infoSep, { backgroundColor: colors.border }]} />}
+            </React.Fragment>
+          ))}
+        </View>
 
-        {/* ── INFORMACIÓN ── */}
-        <Seccion titulo="INFORMACIÓN">
-          <View style={infoS.card}>
-            <View style={infoS.fila}>
-              <Text style={infoS.label}>Versión</Text>
-              <Text style={infoS.val}>1.0.0 MVP</Text>
-            </View>
-            <View style={infoS.sep} />
-            <View style={infoS.fila}>
-              <Text style={infoS.label}>Base de datos</Text>
-              <Text style={infoS.val}>SQLite local</Text>
-            </View>
-            <View style={infoS.sep} />
-            <View style={infoS.fila}>
-              <Text style={infoS.label}>Tasa por defecto</Text>
-              <Text style={infoS.val}>Bs. {DEFAULT_TASA_BS_USD}/USD</Text>
-            </View>
-            <View style={infoS.sep} />
-            <View style={infoS.fila}>
-              <Text style={infoS.label}>Plataforma</Text>
-              <Text style={infoS.val}>{Platform.OS === 'android' ? 'Android' : 'iOS'} · Expo SDK 57</Text>
-            </View>
-          </View>
+        <View style={[sS.disclaimer, { backgroundColor: colors.incomeDim, borderColor: colors.income + '30' }]}>
+          <Ionicons name="shield-checkmark" size={16} color={colors.textMuted} />
+          <Text style={[sS.disclaimerTxt, { color: colors.textSecondary }]}>
+            Todos tus datos se almacenan localmente en este dispositivo. Nunca se envían a servidores externos.
+          </Text>
+        </View>
 
-          {/* Descargo */}
-          <View style={infoS.disclaimer}>
-            <Ionicons name="shield-checkmark" size={16} color={COLORS.textMuted} />
-            <Text style={infoS.disclaimerTxt}>
-              Todos tus datos se almacenan localmente en este dispositivo. Nunca se envían a servidores externos.
-            </Text>
-          </View>
-        </Seccion>
-
-        <View style={{ height: SPACING['3xl'] }} />
+        <View style={{ height: 60 }} />
       </ScrollView>
     </View>
   );
 }
 
-// ============================================================
-// ESTILOS
-// ============================================================
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  centrado: { alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingHorizontal: SPACING.base, paddingVertical: SPACING.md, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  backBtn: { width: 36, height: 36, borderRadius: RADIUS.sm, backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: COLORS.border },
-  titulo: { fontSize: TYPOGRAPHY.xl, fontWeight: '800', color: COLORS.textPrimary },
-  scroll: { padding: SPACING.base },
-});
-
-const tasaS = StyleSheet.create({
-  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: SPACING.base, borderWidth: 1, borderColor: COLORS.border, gap: SPACING.sm },
-  tasaHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  tasaLabel: { fontSize: TYPOGRAPHY.base, fontWeight: '700', color: COLORS.textPrimary, flex: 1 },
-  tasaActualBadge: { backgroundColor: COLORS.warningDim, paddingHorizontal: SPACING.sm, paddingVertical: 4, borderRadius: RADIUS.full },
-  tasaActualTxt: { fontSize: TYPOGRAPHY.xs, fontWeight: '700', color: COLORS.warning },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.background, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
-  inputPrefix: { paddingHorizontal: SPACING.md, fontSize: TYPOGRAPHY.lg, fontWeight: '700', color: COLORS.textSecondary, backgroundColor: COLORS.surfaceAlt },
-  input: { flex: 1, padding: SPACING.md, fontSize: TYPOGRAPHY['2xl'], fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center' },
-  inputSuffix: { paddingHorizontal: SPACING.md, fontSize: TYPOGRAPHY.lg, fontWeight: '700', color: COLORS.textSecondary, backgroundColor: COLORS.surfaceAlt },
-  diferencia: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs, backgroundColor: COLORS.warningDim, borderRadius: RADIUS.sm, padding: SPACING.sm },
-  diferenciaTxt: { fontSize: TYPOGRAPHY.xs, color: COLORS.warning },
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm, backgroundColor: COLORS.warning, borderRadius: RADIUS.md, padding: SPACING.md },
-  btnTxt: { fontSize: TYPOGRAPHY.base, fontWeight: '800', color: '#fff' },
-  nota: { fontSize: TYPOGRAPHY.xs, color: COLORS.textMuted, lineHeight: 16 },
-});
-
-const infoS = StyleSheet.create({
-  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
-  fila: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SPACING.md },
-  sep: { height: 1, backgroundColor: COLORS.border },
-  label: { fontSize: TYPOGRAPHY.sm, color: COLORS.textSecondary },
-  val: { fontSize: TYPOGRAPHY.sm, fontWeight: '600', color: COLORS.textPrimary },
-  disclaimer: { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm, backgroundColor: COLORS.incomeDim, borderRadius: RADIUS.md, padding: SPACING.md, marginTop: SPACING.sm, borderWidth: 1, borderColor: COLORS.income + '30' },
-  disclaimerTxt: { fontSize: TYPOGRAPHY.xs, color: COLORS.textSecondary, flex: 1, lineHeight: 16 },
+const sS = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  backBtn: { width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  titulo: { fontSize: 20, fontWeight: '800' },
+  scroll: { padding: 16 },
+  secTitulo: { fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 10 },
+  fila: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 12, marginBottom: 8, borderWidth: 1 },
+  filaIcono: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  filaLabel: { fontSize: 15, fontWeight: '600' },
+  filaDesc: { fontSize: 12, marginTop: 2 },
+  tasaCard: { borderRadius: 14, padding: 16, borderWidth: 1, gap: 12 },
+  tasaActual: { fontSize: 13 },
+  tasaInputRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, borderWidth: 1, overflow: 'hidden' },
+  tasaPrefix: { paddingHorizontal: 14, paddingVertical: 14, fontSize: 16, fontWeight: '700' },
+  tasaInput: { flex: 1, padding: 14, fontSize: 22, fontWeight: '700' },
+  tasaBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, padding: 14 },
+  tasaBtnTxt: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  infoCard: { borderRadius: 14, borderWidth: 1, overflow: 'hidden', marginBottom: 12 },
+  infoFila: { flexDirection: 'row', justifyContent: 'space-between', padding: 14 },
+  infoLabel: { fontSize: 14 },
+  infoVal: { fontSize: 14, fontWeight: '600' },
+  infoSep: { height: 1 },
+  disclaimer: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 12, padding: 14, borderWidth: 1 },
+  disclaimerTxt: { fontSize: 12, flex: 1, lineHeight: 16 },
 });

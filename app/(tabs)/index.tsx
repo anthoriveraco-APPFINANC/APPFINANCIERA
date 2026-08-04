@@ -1,936 +1,246 @@
 // ============================================================
-// DASHBOARD — Pantalla Principal
-// App Financiera Personal
+// DASHBOARD — Cuantos Dolitas
 // ============================================================
-
 import React, { useCallback, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  StatusBar,
-  Animated,
-  Platform,
-  Pressable,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  RefreshControl, StatusBar, Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useTheme } from '../_layout';
 import { useDashboard } from '../../src/hooks/useDashboard';
 import { formatUSD, formatFecha, nombreMes, hoyDB } from '../../src/utils/currency';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../src/constants';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../src/constants';
 import type { ResumenDashboard } from '../../src/types';
 
-// ============================================================
-// TIPOS INTERNOS
-// ============================================================
-interface TarjetaConfig {
-  titulo: string;
-  valor: number;
-  color: string;
-  colorFondo: string;
-  icono: React.ComponentProps<typeof Ionicons>['name'];
-  sufijo?: string;
-  prefijo?: string;
-  negativo?: boolean;
-}
-
-interface AccionRapida {
-  label: string;
-  icono: React.ComponentProps<typeof Ionicons>['name'];
-  color: string;
-  ruta: string;
-}
-
-// ============================================================
-// COMPONENTE: Tarjeta de Resumen
-// ============================================================
-function TarjetaResumen({
-  config,
-  ocultar,
-  ancho = '48%',
-}: {
-  config: TarjetaConfig;
-  ocultar: boolean;
-  ancho?: string;
+function TarjetaResumen({ titulo, valor, color, colorFondo, icono, ocultar, negativo }: {
+  titulo: string; valor: number; color: string; colorFondo: string;
+  icono: React.ComponentProps<typeof Ionicons>['name']; ocultar: boolean; negativo?: boolean;
 }) {
-  const valorFormateado = ocultar
-    ? '$***.**'
-    : formatUSD(Math.abs(config.valor));
-
-  const esNegativo = config.valor < 0;
-
+  const { colors } = useTheme();
+  const esNeg = valor < 0 && negativo;
   return (
-    <View
-      style={[
-        styles.tarjeta,
-        { width: ancho as any, backgroundColor: COLORS.surface },
-      ]}
-    >
-      {/* Header de la tarjeta */}
-      <View style={styles.tarjetaHeader}>
-        <View
-          style={[
-            styles.tarjetaIcono,
-            { backgroundColor: config.colorFondo },
-          ]}
-        >
-          <Ionicons name={config.icono} size={18} color={config.color} />
+    <View style={[s.tarjeta, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={s.tarjetaHeader}>
+        <View style={[s.tarjetaIcono, { backgroundColor: colorFondo }]}>
+          <Ionicons name={icono} size={18} color={color} />
         </View>
-        <Text style={styles.tarjetaTitulo} numberOfLines={1}>
-          {config.titulo}
-        </Text>
+        <Text style={[s.tarjetaTitulo, { color: colors.textSecondary }]} numberOfLines={1}>{titulo}</Text>
       </View>
-
-      {/* Valor principal */}
-      <Text
-        style={[
-          styles.tarjetaValor,
-          {
-            color: esNegativo && config.negativo
-              ? COLORS.expense
-              : config.color,
-          },
-        ]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
-        {esNegativo && config.negativo ? '-' : ''}
-        {valorFormateado}
+      <Text style={[s.tarjetaValor, { color: esNeg ? colors.expense : color }]} numberOfLines={1} adjustsFontSizeToFit>
+        {ocultar ? '$***.**' : `${esNeg ? '-' : ''}${formatUSD(Math.abs(valor))}`}
       </Text>
-
-      {/* Indicador de color en borde inferior */}
-      <View
-        style={[styles.tarjetaBorde, { backgroundColor: config.color }]}
-      />
+      <View style={[s.tarjetaBorde, { backgroundColor: color }]} />
     </View>
   );
 }
 
-// ============================================================
-// COMPONENTE: Fila de Desglose
-// ============================================================
-function FilaDesglose({
-  label,
-  valor,
-  color,
-  ocultar,
-}: {
-  label: string;
-  valor: number;
-  color: string;
-  ocultar: boolean;
-}) {
-  return (
-    <View style={styles.desgloseFila}>
-      <View style={[styles.desglosePunto, { backgroundColor: color }]} />
-      <Text style={styles.desgloseLabel}>{label}</Text>
-      <Text style={[styles.desgloseValor, { color }]}>
-        {ocultar ? '$***.**' : formatUSD(valor)}
-      </Text>
-    </View>
-  );
-}
-
-// ============================================================
-// COMPONENTE: Sección de Flujo del Mes
-// ============================================================
-function SeccionFlujoMes({
-  resumen,
-  ocultar,
-}: {
-  resumen: ResumenDashboard;
-  ocultar: boolean;
-}) {
-  const balance = resumen.ingresos_mes_usd - resumen.gastos_mes_usd;
-  const esPositivo = balance >= 0;
-  const porcentajeGasto =
-    resumen.ingresos_mes_usd > 0
-      ? Math.min(
-          100,
-          (resumen.gastos_mes_usd / resumen.ingresos_mes_usd) * 100,
-        )
-      : 0;
-
-  const hoy = hoyDB();
-  const mesActual = nombreMes(hoy);
-
-  return (
-    <View style={styles.seccionFlujo}>
-      {/* Header */}
-      <View style={styles.seccionHeader}>
-        <Text style={styles.seccionTitulo}>Flujo de {mesActual}</Text>
-        <View
-          style={[
-            styles.balanceBadge,
-            {
-              backgroundColor: esPositivo ? COLORS.incomeDim : COLORS.expenseDim,
-            },
-          ]}
-        >
-          <Ionicons
-            name={esPositivo ? 'trending-up' : 'trending-down'}
-            size={12}
-            color={esPositivo ? COLORS.income : COLORS.expense}
-          />
-          <Text
-            style={[
-              styles.balanceTexto,
-              { color: esPositivo ? COLORS.income : COLORS.expense },
-            ]}
-          >
-            {ocultar ? '***' : (esPositivo ? '+' : '') + formatUSD(balance)}
-          </Text>
-        </View>
-      </View>
-
-      {/* Barra de progreso Ingresos vs Gastos */}
-      <View style={styles.barraContainer}>
-        <View style={styles.barraFondo}>
-          <View
-            style={[
-              styles.barraProgreso,
-              {
-                width: `${porcentajeGasto}%` as any,
-                backgroundColor:
-                  porcentajeGasto > 90 ? COLORS.expense : COLORS.warning,
-              },
-            ]}
-          />
-        </View>
-        <Text style={styles.barraTexto}>
-          {ocultar ? '**%' : `${porcentajeGasto.toFixed(0)}% del ingreso gastado`}
-        </Text>
-      </View>
-
-      {/* Desglose */}
-      <FilaDesglose
-        label="↑ Ingresos del mes"
-        valor={resumen.ingresos_mes_usd}
-        color={COLORS.income}
-        ocultar={ocultar}
-      />
-      <FilaDesglose
-        label="↓ Gastos del mes"
-        valor={resumen.gastos_mes_usd}
-        color={COLORS.expense}
-        ocultar={ocultar}
-      />
-      {resumen.gastos_negocio_mes_usd > 0 && (
-        <>
-          <View style={styles.desgloseIndentado}>
-            <FilaDesglose
-              label="  · Personal"
-              valor={resumen.gastos_personales_mes_usd}
-              color={COLORS.textSecondary}
-              ocultar={ocultar}
-            />
-            <FilaDesglose
-              label="  · Negocio / Producción"
-              valor={resumen.gastos_negocio_mes_usd}
-              color={COLORS.warning}
-              ocultar={ocultar}
-            />
-          </View>
-        </>
-      )}
-    </View>
-  );
-}
-
-// ============================================================
-// COMPONENTE: Botón de Acción Rápida (FAB)
-// ============================================================
-function BotonAccion({ accion }: { accion: AccionRapida }) {
-  return (
-    <TouchableOpacity
-      style={[styles.fab, { backgroundColor: accion.color + '22' }]}
-      onPress={() => router.push(accion.ruta as any)}
-      activeOpacity={0.75}
-    >
-      <View style={[styles.fabIcono, { backgroundColor: accion.color }]}>
-        <Ionicons name={accion.icono} size={18} color="#fff" />
-      </View>
-      <Text style={styles.fabLabel}>{accion.label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-// ============================================================
-// COMPONENTE: Alerta de Vencimiento
-// ============================================================
-function AlertaVencimiento({ dia }: { dia: number }) {
+function AlertaVencimiento({ dia, colors }: { dia: number; colors: any }) {
   const hoy = new Date();
-  const diaActual = hoy.getDate();
-  const diasRestantes = dia - diaActual;
-
-  if (diasRestantes < 0 || diasRestantes > 5) return null;
-
-  const urgente = diasRestantes <= 1;
-
+  const diff = dia - hoy.getDate();
+  if (diff < 0 || diff > 5) return null;
+  const urgente = diff <= 1;
   return (
-    <View
-      style={[
-        styles.alerta,
-        {
-          backgroundColor: urgente ? COLORS.expenseDim : COLORS.warningDim,
-          borderColor: urgente ? COLORS.expense : COLORS.warning,
-        },
-      ]}
-    >
-      <Ionicons
-        name="warning"
-        size={16}
-        color={urgente ? COLORS.expense : COLORS.warning}
-      />
-      <Text
-        style={[
-          styles.alertaTexto,
-          { color: urgente ? COLORS.expense : COLORS.warning },
-        ]}
-      >
-        {diasRestantes === 0
-          ? '⚠️ Vence HOY: Interés Gregory ($52.50 restantes)'
-          : `Vence en ${diasRestantes} día${diasRestantes > 1 ? 's' : ''}: Interés Gregory`}
+    <View style={[s.alerta, { backgroundColor: urgente ? colors.expenseDim : colors.warningDim, borderColor: urgente ? colors.expense : colors.warning }]}>
+      <Ionicons name="warning" size={16} color={urgente ? colors.expense : colors.warning} />
+      <Text style={[s.alertaTxt, { color: urgente ? colors.expense : colors.warning }]}>
+        {diff === 0 ? '⚠️ Vence HOY — revisa tus compromisos' : `Vence en ${diff} día${diff > 1 ? 's' : ''}`}
       </Text>
     </View>
   );
 }
 
-// ============================================================
-// DASHBOARD PRINCIPAL
-// ============================================================
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
-  const {
-    resumen,
-    ajustes,
-    cargando,
-    error,
-    ocultarSaldos,
-    toggleOcultarSaldos,
-    refrescar,
-  } = useDashboard();
+  const { colors, esOscuro, toggleTema } = useTheme();
+  const { resumen, ajustes, cargando, error, ocultarSaldos, toggleOcultarSaldos, refrescar } = useDashboard();
 
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const tarjetas = resumen ? [
+    { titulo: 'Por Cobrar',   valor: resumen.total_por_cobrar_usd,       color: colors.cobrar,  colorFondo: colors.cobrarDim,  icono: 'arrow-down-circle' as const },
+    { titulo: 'Por Pagar',    valor: resumen.total_por_pagar_usd,        color: colors.expense, colorFondo: colors.expenseDim, icono: 'arrow-up-circle' as const },
+    { titulo: 'Inversiones',  valor: resumen.total_inversiones_activas_usd, color: colors.info, colorFondo: colors.infoDim,    icono: 'trending-up' as const },
+    { titulo: 'Liquidez',     valor: resumen.liquidez_neta_usd,          color: resumen.liquidez_neta_usd >= 0 ? colors.income : colors.expense, colorFondo: resumen.liquidez_neta_usd >= 0 ? colors.incomeDim : colors.expenseDim, icono: 'wallet' as const, negativo: true },
+  ] : [];
 
-  // Tarjetas principales del grid
-  const tarjetas: TarjetaConfig[] = resumen
-    ? [
-        {
-          titulo: 'Por Cobrar',
-          valor: resumen.total_por_cobrar_usd,
-          color: COLORS.cobrar,
-          colorFondo: COLORS.cobrarDim,
-          icono: 'arrow-down-circle',
-        },
-        {
-          titulo: 'Por Pagar',
-          valor: resumen.total_por_pagar_usd,
-          color: COLORS.expense,
-          colorFondo: COLORS.expenseDim,
-          icono: 'arrow-up-circle',
-        },
-        {
-          titulo: 'Inversiones',
-          valor: resumen.total_inversiones_activas_usd,
-          color: COLORS.info,
-          colorFondo: COLORS.infoDim,
-          icono: 'trending-up',
-        },
-        {
-          titulo: 'Liquidez Neta',
-          valor: resumen.liquidez_neta_usd,
-          color:
-            resumen.liquidez_neta_usd >= 0 ? COLORS.income : COLORS.expense,
-          colorFondo:
-            resumen.liquidez_neta_usd >= 0
-              ? COLORS.incomeDim
-              : COLORS.expenseDim,
-          icono: 'wallet',
-          negativo: true,
-        },
-      ]
-    : [];
-
-  // Acciones rápidas
-  const acciones: AccionRapida[] = [
-    {
-      label: '+ Gasto',
-      icono: 'remove-circle',
-      color: COLORS.expense,
-      ruta: '/modals/nuevo-gasto',
-    },
-    {
-      label: '+ Ingreso',
-      icono: 'add-circle',
-      color: COLORS.income,
-      ruta: '/modals/nuevo-ingreso',
-    },
-    {
-      label: '+ Abono',
-      icono: 'cash',
-      color: COLORS.warning,
-      ruta: '/modals/nuevo-abono',
-    },
-    {
-      label: '+ Activo',
-      icono: 'trending-up',
-      color: COLORS.info,
-      ruta: '/modals/nueva-inversion',
-    },
+  const acciones = [
+    { label: '+ Gasto',   icono: 'remove-circle' as const, color: colors.expense, ruta: '/modals/nuevo-gasto' },
+    { label: '+ Ingreso', icono: 'add-circle' as const,    color: colors.income,  ruta: '/modals/nuevo-ingreso' },
+    { label: '+ Abono',   icono: 'cash' as const,          color: colors.warning, ruta: '/modals/nuevo-abono' },
+    { label: '+ Activo',  icono: 'trending-up' as const,   color: colors.info,    ruta: '/modals/nueva-inversion' },
   ];
 
-  // ---- RENDER ----
+  if (error) return (
+    <View style={[s.container, s.centrado, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <Text style={{ color: colors.expense }}>{error}</Text>
+      <TouchableOpacity style={[s.btnRecargar, { backgroundColor: colors.accent }]} onPress={refrescar}>
+        <Text style={{ color: '#fff', fontWeight: '700' }}>Reintentar</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-  if (error) {
-    return (
-      <View style={[styles.container, styles.centrado]}>
-        <Ionicons name="warning" size={48} color={COLORS.expense} />
-        <Text style={styles.errorTexto}>{error}</Text>
-        <TouchableOpacity style={styles.btnRecargar} onPress={refrescar}>
-          <Text style={styles.btnRecargarTexto}>Reintentar</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const patrimonio = (resumen?.total_inversiones_activas_usd ?? 0) + (resumen?.total_por_cobrar_usd ?? 0) - (resumen?.total_por_pagar_usd ?? 0);
+  const balancePos = (resumen?.liquidez_neta_usd ?? 0) >= 0;
+  const pctGasto = resumen?.ingresos_mes_usd ? Math.min(100, (resumen.gastos_mes_usd / resumen.ingresos_mes_usd) * 100) : 0;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
-
-      {/* ── HEADER ── */}
-      <View style={styles.header}>
+    <View style={[s.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      {/* HEADER */}
+      <View style={[s.header, { borderBottomColor: colors.border }]}>
         <View>
-          <Text style={styles.headerSaludo}>Buenos días 👋</Text>
-          <Text style={styles.headerFecha}>
+          <Text style={[s.headerTitulo, { color: colors.textPrimary }]}>Cuantos Dolitas 💵</Text>
+          <Text style={[s.headerSub, { color: colors.textSecondary }]}>
             {formatFecha(hoyDB())} · Bs. {ajustes?.tasa_global_bs_usd.toFixed(2) ?? '—'}/USD
           </Text>
         </View>
-        <View style={styles.headerAcciones}>
-          {/* Botón Modo Privacidad */}
-          <TouchableOpacity
-            style={styles.headerBtn}
-            onPress={toggleOcultarSaldos}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={ocultarSaldos ? 'eye-off' : 'eye'}
-              size={20}
-              color={ocultarSaldos ? COLORS.warning : COLORS.textSecondary}
-            />
+        <View style={s.headerBtns}>
+          <TouchableOpacity style={[s.headerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={toggleTema}>
+            <Ionicons name={esOscuro ? 'sunny' : 'moon'} size={18} color={esOscuro ? colors.warning : colors.accent} />
           </TouchableOpacity>
-          {/* Ajustes */}
-          <TouchableOpacity
-            style={styles.headerBtn}
-            onPress={() => router.push('/settings' as any)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="settings-outline" size={20} color={COLORS.textSecondary} />
+          <TouchableOpacity style={[s.headerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={toggleOcultarSaldos}>
+            <Ionicons name={ocultarSaldos ? 'eye-off' : 'eye'} size={18} color={ocultarSaldos ? colors.warning : colors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[s.headerBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => router.push('/settings' as any)}>
+            <Ionicons name="settings-outline" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
-        refreshControl={
-          <RefreshControl
-            refreshing={cargando}
-            onRefresh={refrescar}
-            tintColor={COLORS.accent}
-            colors={[COLORS.accent]}
-            progressBackgroundColor={COLORS.surface}
-          />
-        }
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false },
-        )}
-        scrollEventThrottle={16}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scroll}
+        refreshControl={<RefreshControl refreshing={cargando} onRefresh={refrescar} tintColor={colors.accent} colors={[colors.accent]} progressBackgroundColor={colors.surface} />}>
 
-        {/* ── ALERTA DE VENCIMIENTO ── */}
-        {resumen && <AlertaVencimiento dia={7} />}
+        {/* Alerta vencimiento */}
+        <AlertaVencimiento dia={7} colors={colors} />
 
-        {/* ── TARJETA HÉROE — Patrimonio Neto ── */}
-        <View style={styles.heroCard}>
-          <Text style={styles.heroLabel}>PATRIMONIO NETO ESTIMADO</Text>
-          <Text style={styles.heroValor}>
-            {cargando
-              ? '...'
-              : ocultarSaldos
-              ? '$***,***.**'
-              : formatUSD(
-                  (resumen?.total_inversiones_activas_usd ?? 0) +
-                  (resumen?.total_por_cobrar_usd ?? 0) -
-                  (resumen?.total_por_pagar_usd ?? 0),
-                )}
+        {/* HERO — Patrimonio */}
+        <View style={[s.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[s.heroLabel, { color: colors.textMuted }]}>PATRIMONIO NETO ESTIMADO</Text>
+          <Text style={[s.heroValor, { color: colors.textPrimary }]}>
+            {cargando ? '...' : ocultarSaldos ? '$***,***.**' : formatUSD(patrimonio)}
           </Text>
-          <Text style={styles.heroSub}>
-            Activos + Por Cobrar − Deudas
-          </Text>
-
-          {/* Mini stats horizontales */}
-          <View style={styles.heroStats}>
-            <View style={styles.heroStat}>
-              <Ionicons name="arrow-up" size={12} color={COLORS.cobrar} />
-              <Text style={styles.heroStatLabel}>A Favor</Text>
-              <Text style={[styles.heroStatVal, { color: COLORS.cobrar }]}>
-                {ocultarSaldos
-                  ? '***'
-                  : formatUSD(resumen?.total_por_cobrar_usd ?? 0)}
-              </Text>
-            </View>
-            <View style={styles.heroStatDiv} />
-            <View style={styles.heroStat}>
-              <Ionicons name="arrow-down" size={12} color={COLORS.expense} />
-              <Text style={styles.heroStatLabel}>Deudas</Text>
-              <Text style={[styles.heroStatVal, { color: COLORS.expense }]}>
-                {ocultarSaldos
-                  ? '***'
-                  : formatUSD(resumen?.total_por_pagar_usd ?? 0)}
-              </Text>
-            </View>
-            <View style={styles.heroStatDiv} />
-            <View style={styles.heroStat}>
-              <Ionicons name="trending-up" size={12} color={COLORS.info} />
-              <Text style={styles.heroStatLabel}>Activos</Text>
-              <Text style={[styles.heroStatVal, { color: COLORS.info }]}>
-                {ocultarSaldos
-                  ? '***'
-                  : formatUSD(resumen?.total_inversiones_activas_usd ?? 0)}
-              </Text>
-            </View>
+          <Text style={[s.heroSub, { color: colors.textMuted }]}>Activos + Por Cobrar − Deudas</Text>
+          <View style={[s.heroStats, { borderTopColor: colors.border }]}>
+            {[
+              { label: 'A Favor', val: resumen?.total_por_cobrar_usd ?? 0, color: colors.cobrar },
+              { label: 'Deudas',  val: resumen?.total_por_pagar_usd ?? 0,  color: colors.expense },
+              { label: 'Activos', val: resumen?.total_inversiones_activas_usd ?? 0, color: colors.info },
+            ].map((item, i) => (
+              <React.Fragment key={item.label}>
+                {i > 0 && <View style={[s.heroStatDiv, { backgroundColor: colors.border }]} />}
+                <View style={s.heroStat}>
+                  <Text style={[s.heroStatLabel, { color: colors.textMuted }]}>{item.label}</Text>
+                  <Text style={[s.heroStatVal, { color: item.color }]}>
+                    {ocultarSaldos ? '***' : formatUSD(item.val)}
+                  </Text>
+                </View>
+              </React.Fragment>
+            ))}
           </View>
         </View>
 
-        {/* ── GRID DE TARJETAS ── */}
-        <Text style={styles.seccionLabel}>RESUMEN FINANCIERO</Text>
-        {cargando ? (
-          <View style={styles.skeletonGrid}>
-            {[0, 1, 2, 3].map((i) => (
-              <View key={i} style={styles.skeletonCard} />
-            ))}
-          </View>
-        ) : (
-          <View style={styles.grid}>
-            {tarjetas.map((t, i) => (
-              <TarjetaResumen
-                key={i}
-                config={t}
-                ocultar={ocultarSaldos}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* ── FLUJO DEL MES ── */}
-        {resumen && !cargando && (
-          <SeccionFlujoMes resumen={resumen} ocultar={ocultarSaldos} />
-        )}
-
-        {/* ── ACCIONES RÁPIDAS ── */}
-        <Text style={styles.seccionLabel}>ACCIONES RÁPIDAS</Text>
-        <View style={styles.fabGrid}>
-          {acciones.map((a, i) => (
-            <BotonAccion key={i} accion={a} />
+        {/* GRID TARJETAS */}
+        <Text style={[s.secLabel, { color: colors.textMuted }]}>RESUMEN FINANCIERO</Text>
+        <View style={s.grid}>
+          {tarjetas.map((t, i) => (
+            <TarjetaResumen key={i} {...t} ocultar={ocultarSaldos} />
           ))}
         </View>
 
-        {/* ── ACCESOS DIRECTOS ── */}
-        <Text style={styles.seccionLabel}>ACCESOS</Text>
-        <View style={styles.accesosGrid}>
-          <TouchableOpacity
-            style={styles.accesoBtn}
-            onPress={() => router.push('/(tabs)/deudas' as any)}
-          >
-            <Ionicons name="people" size={20} color={COLORS.cobrar} />
-            <Text style={styles.accesoBtnTexto}>Gestionar{'\n'}Deudas</Text>
-            <Ionicons name="chevron-forward" size={14} color={COLORS.textMuted} />
-          </TouchableOpacity>
+        {/* FLUJO DEL MES */}
+        {resumen && !cargando && (
+          <View style={[s.flujoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={s.flujoHeader}>
+              <Text style={[s.flujoTitulo, { color: colors.textPrimary }]}>Flujo de {nombreMes(hoyDB())}</Text>
+              <View style={[s.balanceBadge, { backgroundColor: balancePos ? colors.incomeDim : colors.expenseDim }]}>
+                <Ionicons name={balancePos ? 'trending-up' : 'trending-down'} size={12} color={balancePos ? colors.income : colors.expense} />
+                <Text style={[s.balanceTxt, { color: balancePos ? colors.income : colors.expense }]}>
+                  {ocultarSaldos ? '***' : (balancePos ? '+' : '') + formatUSD(resumen.liquidez_neta_usd)}
+                </Text>
+              </View>
+            </View>
+            <View style={[s.barraFondo, { backgroundColor: colors.border }]}>
+              <View style={[s.barraRelleno, { width: `${pctGasto}%` as any, backgroundColor: pctGasto > 90 ? colors.expense : colors.warning }]} />
+            </View>
+            <Text style={[s.barraTxt, { color: colors.textMuted }]}>{pctGasto.toFixed(0)}% del ingreso gastado</Text>
+            {[
+              { label: '↑ Ingresos', val: resumen.ingresos_mes_usd, color: colors.income },
+              { label: '↓ Gastos',   val: resumen.gastos_mes_usd,   color: colors.expense },
+            ].map(item => (
+              <View key={item.label} style={s.desgloseFila}>
+                <View style={[s.desglosePunto, { backgroundColor: item.color }]} />
+                <Text style={[s.desgloseLabel, { color: colors.textSecondary }]}>{item.label}</Text>
+                <Text style={[s.desgloseVal, { color: item.color }]}>
+                  {ocultarSaldos ? '$***.**' : formatUSD(item.val)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
-          <TouchableOpacity
-            style={styles.accesoBtn}
-            onPress={() => router.push('/(tabs)/flujo' as any)}
-          >
-            <Ionicons name="swap-vertical" size={20} color={COLORS.income} />
-            <Text style={styles.accesoBtnTexto}>Flujo{'\n'}de Caja</Text>
-            <Ionicons name="chevron-forward" size={14} color={COLORS.textMuted} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.accesoBtn}
-            onPress={() => router.push('/(tabs)/herramientas' as any)}
-          >
-            <Ionicons name="calculator" size={20} color={COLORS.warning} />
-            <Text style={styles.accesoBtnTexto}>Simulador{'\n'}Deudas</Text>
-            <Ionicons name="chevron-forward" size={14} color={COLORS.textMuted} />
-          </TouchableOpacity>
+        {/* ACCIONES RÁPIDAS */}
+        <Text style={[s.secLabel, { color: colors.textMuted }]}>ACCIONES RÁPIDAS</Text>
+        <View style={s.fabGrid}>
+          {acciones.map((a, i) => (
+            <TouchableOpacity key={i} style={[s.fab, { backgroundColor: a.color + '18', borderColor: colors.border }]}
+              onPress={() => router.push(a.ruta as any)} activeOpacity={0.75}>
+              <View style={[s.fabIcono, { backgroundColor: a.color }]}>
+                <Ionicons name={a.icono} size={18} color="#fff" />
+              </View>
+              <Text style={[s.fabLabel, { color: colors.textSecondary }]}>{a.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Espacio inferior para tabs */}
-        <View style={{ height: SPACING['2xl'] }} />
+        <View style={{ height: 60 }} />
       </ScrollView>
     </View>
   );
 }
 
-// ============================================================
-// ESTILOS
-// ============================================================
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  centrado: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.base,
-    padding: SPACING.xl,
-  },
-
-  // ── HEADER ──
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerSaludo: {
-    fontSize: TYPOGRAPHY.lg,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  headerFecha: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-    letterSpacing: 0.3,
-  },
-  headerAcciones: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-  },
-  headerBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-
-  // ── SCROLL ──
-  scroll: {
-    paddingHorizontal: SPACING.base,
-    paddingTop: SPACING.base,
-  },
-
-  // ── ALERTA ──
-  alerta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    padding: SPACING.md,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    marginBottom: SPACING.md,
-  },
-  alertaTexto: {
-    fontSize: TYPOGRAPHY.sm,
-    fontWeight: '600',
-    flex: 1,
-  },
-
-  // ── HERO CARD ──
-  heroCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.xl,
-    marginBottom: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  heroLabel: {
-    fontSize: TYPOGRAPHY.xs,
-    fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 1.5,
-    marginBottom: SPACING.sm,
-  },
-  heroValor: {
-    fontSize: TYPOGRAPHY['4xl'],
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    letterSpacing: -1,
-    marginBottom: SPACING.xs,
-  },
-  heroSub: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.textMuted,
-    marginBottom: SPACING.lg,
-  },
-  heroStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  heroStat: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 3,
-  },
-  heroStatLabel: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.textMuted,
-  },
-  heroStatVal: {
-    fontSize: TYPOGRAPHY.sm,
-    fontWeight: '700',
-  },
-  heroStatDiv: {
-    width: 1,
-    height: 32,
-    backgroundColor: COLORS.border,
-  },
-
-  // ── SECCIÓN LABEL ──
-  seccionLabel: {
-    fontSize: TYPOGRAPHY.xs,
-    fontWeight: '700',
-    color: COLORS.textMuted,
-    letterSpacing: 1.5,
-    marginBottom: SPACING.sm,
-    marginTop: SPACING.sm,
-  },
-
-  // ── GRID TARJETAS ──
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-    marginBottom: SPACING.lg,
-  },
-  tarjeta: {
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    width: '48%',
-    position: 'relative',
-    overflow: 'hidden',
-    minHeight: 100,
-  },
-  tarjetaHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    marginBottom: SPACING.sm,
-  },
-  tarjetaIcono: {
-    width: 32,
-    height: 32,
-    borderRadius: RADIUS.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tarjetaTitulo: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-    flex: 1,
-  },
-  tarjetaValor: {
-    fontSize: TYPOGRAPHY.xl,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginTop: SPACING.xs,
-  },
-  tarjetaBorde: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    opacity: 0.7,
-  },
-
-  // ── SKELETON ──
-  skeletonGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.sm,
-    marginBottom: SPACING.lg,
-  },
-  skeletonCard: {
-    width: '48%',
-    height: 100,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    opacity: 0.5,
-  },
-
-  // ── FLUJO DEL MES ──
-  seccionFlujo: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.base,
-    marginBottom: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: SPACING.sm,
-  },
-  seccionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.xs,
-  },
-  seccionTitulo: {
-    fontSize: TYPOGRAPHY.base,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  balanceBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: RADIUS.full,
-  },
-  balanceTexto: {
-    fontSize: TYPOGRAPHY.xs,
-    fontWeight: '700',
-  },
-  barraContainer: {
-    gap: 4,
-    marginBottom: SPACING.xs,
-  },
-  barraFondo: {
-    height: 6,
-    backgroundColor: COLORS.border,
-    borderRadius: RADIUS.full,
-    overflow: 'hidden',
-  },
-  barraProgreso: {
-    height: '100%',
-    borderRadius: RADIUS.full,
-  },
-  barraTexto: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.textMuted,
-  },
-  desgloseFila: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  desglosePunto: {
-    width: 7,
-    height: 7,
-    borderRadius: RADIUS.full,
-  },
-  desgloseLabel: {
-    fontSize: TYPOGRAPHY.sm,
-    color: COLORS.textSecondary,
-    flex: 1,
-  },
-  desgloseValor: {
-    fontSize: TYPOGRAPHY.sm,
-    fontWeight: '700',
-  },
-  desgloseIndentado: {
-    paddingLeft: SPACING.base,
-    gap: SPACING.xs,
-    borderLeftWidth: 1,
-    borderLeftColor: COLORS.border,
-    marginLeft: SPACING.xs,
-  },
-
-  // ── FABS ──
-  fabGrid: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-    marginBottom: SPACING.lg,
-  },
-  fab: {
-    flex: 1,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    alignItems: 'center',
-    gap: SPACING.xs,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  fabIcono: {
-    width: 36,
-    height: 36,
-    borderRadius: RADIUS.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fabLabel: {
-    fontSize: TYPOGRAPHY.xs,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-  },
-
-  // ── ACCESOS ──
-  accesosGrid: {
-    gap: SPACING.sm,
-    marginBottom: SPACING.lg,
-  },
-  accesoBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  accesoBtnTexto: {
-    flex: 1,
-    fontSize: TYPOGRAPHY.sm,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-  },
-
-  // ── ERROR ──
-  errorTexto: {
-    fontSize: TYPOGRAPHY.base,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-  },
-  btnRecargar: {
-    backgroundColor: COLORS.accent,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.md,
-    marginTop: SPACING.sm,
-  },
-  btnRecargarTexto: {
-    color: COLORS.textPrimary,
-    fontWeight: '700',
-    fontSize: TYPOGRAPHY.base,
-  },
+const s = StyleSheet.create({
+  container: { flex: 1 },
+  centrado: { alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  headerTitulo: { fontSize: 20, fontWeight: '800' },
+  headerSub: { fontSize: 11, marginTop: 2 },
+  headerBtns: { flexDirection: 'row', gap: 8 },
+  headerBtn: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  scroll: { paddingHorizontal: 16, paddingTop: 16 },
+  alerta: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 12 },
+  alertaTxt: { fontSize: 13, fontWeight: '600', flex: 1 },
+  heroCard: { borderRadius: 20, padding: 20, marginBottom: 16, borderWidth: 1, gap: 4 },
+  heroLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
+  heroValor: { fontSize: 38, fontWeight: '800', letterSpacing: -1 },
+  heroSub: { fontSize: 11, marginBottom: 12 },
+  heroStats: { flexDirection: 'row', paddingTop: 12, borderTopWidth: 1 },
+  heroStat: { flex: 1, alignItems: 'center', gap: 3 },
+  heroStatLabel: { fontSize: 10 },
+  heroStatVal: { fontSize: 13, fontWeight: '800' },
+  heroStatDiv: { width: 1, marginVertical: 4 },
+  secLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 10, marginTop: 4 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
+  tarjeta: { borderRadius: 14, padding: 14, borderWidth: 1, width: '48%', minHeight: 95, position: 'relative', overflow: 'hidden' },
+  tarjetaHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  tarjetaIcono: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  tarjetaTitulo: { fontSize: 11, fontWeight: '600', flex: 1 },
+  tarjetaValor: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
+  tarjetaBorde: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, opacity: 0.7 },
+  flujoCard: { borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, gap: 10 },
+  flujoHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  flujoTitulo: { fontSize: 15, fontWeight: '700' },
+  balanceBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  balanceTxt: { fontSize: 12, fontWeight: '700' },
+  barraFondo: { height: 6, borderRadius: 999, overflow: 'hidden' },
+  barraRelleno: { height: '100%', borderRadius: 999 },
+  barraTxt: { fontSize: 11 },
+  desgloseFila: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  desglosePunto: { width: 7, height: 7, borderRadius: 999 },
+  desgloseLabel: { flex: 1, fontSize: 13 },
+  desgloseVal: { fontSize: 13, fontWeight: '700' },
+  fabGrid: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  fab: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center', gap: 6, borderWidth: 1 },
+  fabIcono: { width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  fabLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  btnRecargar: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10, marginTop: 8 },
 });
