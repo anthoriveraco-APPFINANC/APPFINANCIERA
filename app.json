@@ -1,47 +1,66 @@
 {
   "expo": {
-    "name": "App Financiera Personal",
+    "name": "Cuantos Dolitas",
     "slug": "finanzas-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "finpersonal",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.cuantosdolitas.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Para escanear capturas de pago con OCR",
+        "NSPhotoLibraryUsageDescription": "Para seleccionar capturas de pago de la galería",
+        "NSFaceIDUsageDescription": "Para proteger el acceso a tus finanzas"
+      }
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#0A0E1A"
+        "backgroundColor": "#ffffff"
       },
-      "package": "com.finpersonal.app",
+      "package": "com.cuantosdolitas.app",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT",
-        "android.permission.VIBRATE"
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM"
       ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-sqlite",
       "expo-local-authentication",
+      "expo-font",
       [
         "expo-camera",
-        {
-          "cameraPermission": "Para escanear capturas de pago con OCR"
-        }
+        { "cameraPermission": "Para escanear capturas de pago con OCR" }
       ],
       [
         "expo-image-picker",
-        {
-          "photosPermission": "Para seleccionar capturas de pago de la galería"
-        }
+        { "photosPermission": "Para seleccionar capturas de pago de la galería" }
       ],
       [
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#3B82F6"
+          "color": "#10B981",
+          "sounds": ["./assets/notification.wav"]
         }
       ]
     ],

@@ -1,10 +1,7 @@
 // ============================================================
-// CONSTANTES GLOBALES — App Financiera Personal
+// CONSTANTES GLOBALES — Cuantos Dolitas
 // ============================================================
 
-// ----------------------------
-// CATEGORÍAS DE GASTOS
-// ----------------------------
 export const CATEGORIAS_GASTO_PERSONAL = [
   'Mercado / Comida',
   'Vehículo / Transporte',
@@ -36,9 +33,6 @@ export const TODAS_CATEGORIAS_GASTO = [
   ...CATEGORIAS_GASTO_NEGOCIO,
 ];
 
-// ----------------------------
-// CATEGORÍAS DE INGRESOS
-// ----------------------------
 export const CATEGORIAS_INGRESO = [
   'Salario',
   'Venta Tienda',
@@ -51,9 +45,6 @@ export const CATEGORIAS_INGRESO = [
   'Otro Ingreso',
 ] as const;
 
-// ----------------------------
-// MÉTODOS DE PAGO
-// ----------------------------
 export const METODOS_PAGO = [
   'Efectivo USD',
   'Efectivo BS',
@@ -66,9 +57,6 @@ export const METODOS_PAGO = [
   'Otro',
 ] as const;
 
-// ----------------------------
-// TIPOS DE INVERSIÓN
-// ----------------------------
 export const TIPOS_INVERSION = [
   'Cripto',
   'Inventario',
@@ -76,106 +64,95 @@ export const TIPOS_INVERSION = [
   'Bienes',
 ] as const;
 
-// ----------------------------
-// PALETA DE COLORES — Dark mode financiero
-// ----------------------------
-export const COLORS = {
-  // Fondos
-  background: '#0A0E1A',       // Fondo principal profundo
-  surface: '#111827',           // Cards y superficies
-  surfaceAlt: '#1A2233',        // Cards secundarias / hover
-  border: '#1E2D40',            // Bordes sutiles
-  borderLight: '#2A3A50',       // Bordes más visibles
-
-  // Texto
-  textPrimary: '#F0F4FF',       // Texto principal
-  textSecondary: '#8A9BB5',     // Texto secundario / labels
-  textMuted: '#4A5568',         // Texto muy tenue
-
-  // Acento principal
-  accent: '#3B82F6',            // Azul eléctrico — acción principal
-  accentLight: '#60A5FA',       // Azul claro
-  accentDim: '#1E3A5F',         // Azul oscuro / fondo de chips
-
-  // Semáforo financiero
-  income: '#10B981',            // Verde — ingresos
-  incomeDim: '#064E3B',         // Verde oscuro — fondo
-  expense: '#EF4444',           // Rojo — gastos / deudas por pagar
-  expenseDim: '#450A0A',        // Rojo oscuro — fondo
-  warning: '#F59E0B',           // Amarillo — alertas / vencimientos
-  warningDim: '#451A03',        // Amarillo oscuro — fondo
-  info: '#6366F1',              // Índigo — inversiones
-  infoDim: '#1E1B4B',           // Índigo oscuro — fondo
-  cobrar: '#06B6D4',            // Cyan — cuentas por cobrar
-  cobrarDim: '#083344',         // Cyan oscuro — fondo
-
-  // Estados
+// ============================================================
+// TEMA OSCURO
+// ============================================================
+export const DARK_COLORS = {
+  background: '#0A0E1A',
+  surface: '#111827',
+  surfaceAlt: '#1A2233',
+  border: '#1E2D40',
+  borderLight: '#2A3A50',
+  textPrimary: '#F0F4FF',
+  textSecondary: '#8A9BB5',
+  textMuted: '#4A5568',
+  accent: '#3B82F6',
+  accentLight: '#60A5FA',
+  accentDim: '#1E3A5F',
+  income: '#10B981',
+  incomeDim: '#064E3B',
+  expense: '#EF4444',
+  expenseDim: '#450A0A',
+  warning: '#F59E0B',
+  warningDim: '#451A03',
+  info: '#6366F1',
+  infoDim: '#1E1B4B',
+  cobrar: '#06B6D4',
+  cobrarDim: '#083344',
   success: '#10B981',
   error: '#EF4444',
   disabled: '#374151',
-
-  // Overlay y modales
   overlay: 'rgba(0, 0, 0, 0.75)',
   modalBg: '#131C2E',
 } as const;
 
-// ----------------------------
-// TIPOGRAFÍA — Escalas
-// ----------------------------
+// ============================================================
+// TEMA CLARO
+// ============================================================
+export const LIGHT_COLORS = {
+  background: '#F0F4F8',
+  surface: '#FFFFFF',
+  surfaceAlt: '#E8EDF5',
+  border: '#D1DCE8',
+  borderLight: '#B8C8D8',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#94A3B8',
+  accent: '#2563EB',
+  accentLight: '#3B82F6',
+  accentDim: '#DBEAFE',
+  income: '#059669',
+  incomeDim: '#D1FAE5',
+  expense: '#DC2626',
+  expenseDim: '#FEE2E2',
+  warning: '#D97706',
+  warningDim: '#FEF3C7',
+  info: '#4F46E5',
+  infoDim: '#E0E7FF',
+  cobrar: '#0891B2',
+  cobrarDim: '#CFFAFE',
+  success: '#059669',
+  error: '#DC2626',
+  disabled: '#CBD5E1',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  modalBg: '#F8FAFC',
+} as const;
+
+// Default export (dark — se sobreescribe dinámicamente)
+export let COLORS = DARK_COLORS;
+
 export const TYPOGRAPHY = {
-  xs: 10,
-  sm: 12,
-  base: 14,
-  md: 16,
-  lg: 18,
-  xl: 22,
-  '2xl': 26,
-  '3xl': 32,
-  '4xl': 40,
+  xs: 10, sm: 12, base: 14, md: 16, lg: 18,
+  xl: 22, '2xl': 26, '3xl': 32, '4xl': 40,
 } as const;
 
-// ----------------------------
-// ESPACIADO
-// ----------------------------
 export const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  base: 16,
-  lg: 20,
-  xl: 24,
-  '2xl': 32,
-  '3xl': 48,
+  xs: 4, sm: 8, md: 12, base: 16, lg: 20,
+  xl: 24, '2xl': 32, '3xl': 48,
 } as const;
 
-// ----------------------------
-// BORDES
-// ----------------------------
 export const RADIUS = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 20,
-  full: 999,
+  sm: 6, md: 10, lg: 14, xl: 20, full: 999,
 } as const;
 
-// ----------------------------
-// CONFIGURACIÓN POR DEFECTO
-// ----------------------------
 export const DEFAULT_TASA_BS_USD = 36.50;
-export const ALERTA_TASA_DIFERENCIA_PORCENTAJE = 0.02; // 2%
-export const DB_NAME = 'finanzas_personal.db';
-export const SEED_KEY = 'seed_v1_completado'; // Para no re-ejecutar el seed
+export const ALERTA_TASA_DIFERENCIA_PORCENTAJE = 0.02;
+export const DB_NAME = 'cuantos_dolitas.db';
+export const SEED_KEY = 'seed_v1_completado';
 
-// ----------------------------
-// FORMATOS DE FECHA
-// ----------------------------
 export const FORMATO_FECHA_DISPLAY = 'dd/MM/yyyy';
 export const FORMATO_FECHA_DB = 'yyyy-MM-dd';
 
-// ----------------------------
-// ÍCONOS DE CATEGORÍAS (Expo Vector Icons - Ionicons)
-// ----------------------------
 export const ICONO_CATEGORIA: Record<string, string> = {
   'Mercado / Comida': 'cart',
   'Vehículo / Transporte': 'car',
