@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useDeudas, useAbonosDeuda } from '../../src/hooks/useDeudas';
+import { SwipeableRow } from '../../src/components/SwipeableRow';
 import {
   formatUSD,
   formatBS,
@@ -301,16 +302,26 @@ function ModalHistorial({
         ) : (
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
             {abonos.map(a => (
-              <ItemAbono
+              <SwipeableRow
                 key={a.id}
-                abono={a}
-                onEliminar={(id) => {
+                onEliminar={() => {
                   Alert.alert('Eliminar abono', '¿Eliminar este abono?', [
                     { text: 'Cancelar', style: 'cancel' },
-                    { text: 'Eliminar', style: 'destructive', onPress: async () => { await onEliminar(id); refrescar(); } },
+                    { text: 'Eliminar', style: 'destructive', onPress: async () => { await onEliminar(a.id); refrescar(); } },
                   ]);
                 }}
-              />
+                labelEliminar="Borrar"
+              >
+                <ItemAbono
+                  abono={a}
+                  onEliminar={(id) => {
+                    Alert.alert('Eliminar abono', '¿Eliminar este abono?', [
+                      { text: 'Cancelar', style: 'cancel' },
+                      { text: 'Eliminar', style: 'destructive', onPress: async () => { await onEliminar(id); refrescar(); } },
+                    ]);
+                  }}
+                />
+              </SwipeableRow>
             ))}
             <View style={{ height: 60 }} />
           </ScrollView>
@@ -632,14 +643,19 @@ export default function DeudasScreen() {
           </View>
         ) : (
           listaMostrada.map(deuda => (
-            <TarjetaDeuda
+            <SwipeableRow
               key={deuda.id}
-              deuda={deuda}
-              onAbono={d => setModalAbono({ visible: true, deuda: d })}
-              onVerHistorial={d => setDeudaHistorial(d)}
-              onCompartir={compartirWhatsApp}
-              onCerrar={handleCerrar}
-            />
+              onEliminar={() => handleCerrar(deuda)}
+              labelEliminar="Cerrar"
+            >
+              <TarjetaDeuda
+                deuda={deuda}
+                onAbono={d => setModalAbono({ visible: true, deuda: d })}
+                onVerHistorial={d => setDeudaHistorial(d)}
+                onCompartir={compartirWhatsApp}
+                onCerrar={handleCerrar}
+              />
+            </SwipeableRow>
           ))
         )}
         <View style={{ height: 60 }} />

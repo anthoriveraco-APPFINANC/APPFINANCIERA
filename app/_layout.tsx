@@ -12,6 +12,7 @@ import { Stack } from 'expo-router';
 import { SQLiteProvider, useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'react-native';
 
@@ -219,15 +220,17 @@ function InnerLayout() {
 // ============================================================
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <SQLiteProvider
-        databaseName={DB_NAME}
-        onInit={onDatabaseInit}
-        loadingFallback={<PantallaCargando colors={DARK_COLORS} />}
-      >
-        <InnerLayout />
-      </SQLiteProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <SQLiteProvider
+          databaseName={DB_NAME}
+          onInit={onDatabaseInit}
+          loadingFallback={<PantallaCargando colors={DARK_COLORS} />}
+        >
+          <InnerLayout />
+        </SQLiteProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useFlujo } from '../../src/hooks/useFlujo';
+import { SwipeableRow } from '../../src/components/SwipeableRow';
 import {
   formatUSD,
   formatBS,
@@ -733,11 +734,16 @@ export default function FlujoScreen() {
             </View>
           ) : (
             movimientosFiltrados.map(item => (
-              <ItemMovimiento
+              <SwipeableRow
                 key={`${item._tipo}-${item.id}`}
-                item={item}
-                onEliminar={handleEliminar}
-              />
+                onEliminar={() => handleEliminar(item.id, item._tipo)}
+                labelEliminar="Eliminar"
+              >
+                <ItemMovimiento
+                  item={item}
+                  onEliminar={handleEliminar}
+                />
+              </SwipeableRow>
             ))
           )}
           <View style={{ height: 100 }} />

@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useInversiones, useMovimientosInversion } from '../../src/hooks/useInversiones';
+import { SwipeableRow } from '../../src/components/SwipeableRow';
 import {
   formatUSD, formatBS, formatFecha, hoyDB,
   calcularMontoUSD, detectarAlertaTasa, parsearMonto,
@@ -225,24 +226,35 @@ function ModalHistorial({ inv, onCerrar }: { inv: Inversion | null; onCerrar: ()
             {movimientos.map(m => {
               const color = colorMovimiento(m.tipo_movimiento);
               return (
-                <View key={m.id} style={histS.row}>
-                  <View style={[histS.rowIcono, { backgroundColor: color + '20' }]}>
-                    <Ionicons
-                      name={m.tipo_movimiento === 'APORTE' ? 'add' : m.tipo_movimiento === 'RETIRO_CAPITAL' ? 'remove' : 'trending-up'}
-                      size={14} color={color}
-                    />
-                  </View>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={histS.rowTipo}>{labelMovimiento(m.tipo_movimiento)}</Text>
-                      <Text style={[histS.rowMonto, { color }]}>{formatUSD(m.monto_usd)}</Text>
+                <SwipeableRow
+                  key={m.id}
+                  onEliminar={() => Alert.alert('Eliminar movimiento', '¿Eliminar este movimiento?', [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Eliminar', style: 'destructive', onPress: async () => {
+                      await inv?.id && db?.runAsync?.('DELETE FROM movimientos_inversion WHERE id = ?', [m.id]);
+                    }},
+                  ])}
+                  labelEliminar="Borrar"
+                >
+                  <View style={histS.row}>
+                    <View style={[histS.rowIcono, { backgroundColor: color + '20' }]}>
+                      <Ionicons
+                        name={m.tipo_movimiento === 'APORTE' ? 'add' : m.tipo_movimiento === 'RETIRO_CAPITAL' ? 'remove' : 'trending-up'}
+                        size={14} color={color}
+                      />
                     </View>
-                    <Text style={histS.rowFecha}>
-                      {formatFecha(m.fecha)}
-                      {m.moneda_original === 'BS' ? ` · ${formatBS(m.monto_original)} @ ${m.tasa_cambio}` : ''}
-                    </Text>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={histS.rowTipo}>{labelMovimiento(m.tipo_movimiento)}</Text>
+                        <Text style={[histS.rowMonto, { color }]}>{formatUSD(m.monto_usd)}</Text>
+                      </View>
+                      <Text style={histS.rowFecha}>
+                        {formatFecha(m.fecha)}
+                        {m.moneda_original === 'BS' ? ` · ${formatBS(m.monto_original)} @ ${m.tasa_cambio}` : ''}
+                      </Text>
+                    </View>
                   </View>
-                </View>
+                </SwipeableRow>
               );
             })}
             <View style={{ height: 60 }} />
@@ -706,14 +718,19 @@ export default function InversionesScreen() {
             </View>
           ) : (
             activas.map(inv => (
-              <TarjetaInversion
+              <SwipeableRow
                 key={inv.id}
-                inv={inv}
-                onMovimiento={setInvMovimiento}
-                onActualizar={setInvActualizar}
-                onVerHistorial={setInvHistorial}
-                onCerrar={handleCerrar}
-              />
+                onEliminar={() => handleCerrar(inv)}
+                labelEliminar="Liquidar"
+              >
+                <TarjetaInversion
+                  inv={inv}
+                  onMovimiento={setInvMovimiento}
+                  onActualizar={setInvActualizar}
+                  onVerHistorial={setInvHistorial}
+                  onCerrar={handleCerrar}
+                />
+              </SwipeableRow>
             ))
           )}
         </View>
