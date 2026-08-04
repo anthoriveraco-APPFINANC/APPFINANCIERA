@@ -547,7 +547,7 @@ export default function DashboardScreen() {
         <View style={styles.accesosGrid}>
           <TouchableOpacity
             style={styles.accesoBtn}
-            onPress={() => router.push('/tabs/deudas' as any)}
+            onPress={() => router.push('/(tabs)/deudas' as any)}
           >
             <Ionicons name="people" size={20} color={COLORS.cobrar} />
             <Text style={styles.accesoBtnTexto}>Gestionar{'\n'}Deudas</Text>
@@ -556,7 +556,7 @@ export default function DashboardScreen() {
 
           <TouchableOpacity
             style={styles.accesoBtn}
-            onPress={() => router.push('/tabs/flujo' as any)}
+            onPress={() => router.push('/(tabs)/flujo' as any)}
           >
             <Ionicons name="swap-vertical" size={20} color={COLORS.income} />
             <Text style={styles.accesoBtnTexto}>Flujo{'\n'}de Caja</Text>
@@ -565,7 +565,7 @@ export default function DashboardScreen() {
 
           <TouchableOpacity
             style={styles.accesoBtn}
-            onPress={() => router.push('/tabs/herramientas' as any)}
+            onPress={() => router.push('/(tabs)/herramientas' as any)}
           >
             <Ionicons name="calculator" size={20} color={COLORS.warning} />
             <Text style={styles.accesoBtnTexto}>Simulador{'\n'}Deudas</Text>
