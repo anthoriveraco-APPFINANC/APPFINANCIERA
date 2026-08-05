@@ -7,11 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "finpersonal",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.cuantosdolitas.app",
